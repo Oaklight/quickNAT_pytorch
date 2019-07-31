@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import torch.utils.data as data
 from torchvision import transforms
-import utils.preprocessor as preprocessor
+import preprocessor
 
 transform_train = transforms.Compose([
     transforms.RandomCrop(200, padding=56),
@@ -32,19 +32,38 @@ class ImdbData(data.Dataset):
 
 
 def get_imdb_dataset(data_params):
-    data_train = h5py.File(os.path.join(data_params['data_dir'], data_params['train_data_file']), 'r')
-    label_train = h5py.File(os.path.join(data_params['data_dir'], data_params['train_label_file']), 'r')
-    class_weight_train = h5py.File(os.path.join(data_params['data_dir'], data_params['train_class_weights_file']), 'r')
-    weight_train = h5py.File(os.path.join(data_params['data_dir'], data_params['train_weights_file']), 'r')
+    data_train = h5py.File(
+        os.path.join(data_params['data_dir'], data_params['train_data_file']),
+        'r')
+    label_train = h5py.File(
+        os.path.join(data_params['data_dir'], data_params['train_label_file']),
+        'r')
+    class_weight_train = h5py.File(
+        os.path.join(data_params['data_dir'],
+                     data_params['train_class_weights_file']), 'r')
+    weight_train = h5py.File(
+        os.path.join(data_params['data_dir'],
+                     data_params['train_weights_file']), 'r')
 
-    data_test = h5py.File(os.path.join(data_params['data_dir'], data_params['test_data_file']), 'r')
-    label_test = h5py.File(os.path.join(data_params['data_dir'], data_params['test_label_file']), 'r')
-    class_weight_test = h5py.File(os.path.join(data_params['data_dir'], data_params['test_class_weights_file']), 'r')
-    weight_test = h5py.File(os.path.join(data_params['data_dir'], data_params['test_weights_file']), 'r')
+    data_test = h5py.File(
+        os.path.join(data_params['data_dir'], data_params['test_data_file']),
+        'r')
+    label_test = h5py.File(
+        os.path.join(data_params['data_dir'], data_params['test_label_file']),
+        'r')
+    class_weight_test = h5py.File(
+        os.path.join(data_params['data_dir'],
+                     data_params['test_class_weights_file']), 'r')
+    weight_test = h5py.File(
+        os.path.join(data_params['data_dir'],
+                     data_params['test_weights_file']), 'r')
 
-    return (ImdbData(data_train['data'][()], label_train['label'][()], class_weight_train['class_weights'][()],
+    return (ImdbData(data_train['data'][()],
+                     label_train['label'][()],
+                     class_weight_train['class_weights'][()],
                      transforms=transform_train),
-            ImdbData(data_test['data'][()], label_test['label'][()], class_weight_test['class_weights'][()]))
+            ImdbData(data_test['data'][()], label_test['label'][()],
+                     class_weight_test['class_weights'][()]))
 
 
 def load_dataset(file_paths,
@@ -57,11 +76,13 @@ def load_dataset(file_paths,
     volume_list, labelmap_list, headers, class_weights_list, weights_list = [], [], [], [], []
 
     for file_path in file_paths:
-        volume, labelmap, class_weights, weights, header = load_and_preprocess(file_path, orientation,
-                                                                               remap_config=remap_config,
-                                                                               reduce_slices=reduce_slices,
-                                                                               remove_black=remove_black,
-                                                                               return_weights=return_weights)
+        volume, labelmap, class_weights, weights, header = load_and_preprocess(
+            file_path,
+            orientation,
+            remap_config=remap_config,
+            reduce_slices=reduce_slices,
+            remove_black=remove_black,
+            return_weights=return_weights)
 
         volume_list.append(volume)
         labelmap_list.append(labelmap)
@@ -80,15 +101,21 @@ def load_dataset(file_paths,
         return volume_list, labelmap_list, headers
 
 
-def load_and_preprocess(file_path, orientation, remap_config, reduce_slices=False,
+def load_and_preprocess(file_path,
+                        orientation,
+                        remap_config,
+                        reduce_slices=False,
                         remove_black=False,
                         return_weights=False):
     volume, labelmap, header = load_data(file_path, orientation)
 
-    volume, labelmap, class_weights, weights = preprocess(volume, labelmap, remap_config=remap_config,
-                                                          reduce_slices=reduce_slices,
-                                                          remove_black=remove_black,
-                                                          return_weights=return_weights)
+    volume, labelmap, class_weights, weights = preprocess(
+        volume,
+        labelmap,
+        remap_config=remap_config,
+        reduce_slices=reduce_slices,
+        remove_black=remove_black,
+        return_weights=return_weights)
     return volume, labelmap, class_weights, weights, header
 
 
@@ -96,11 +123,17 @@ def load_data(file_path, orientation):
     volume_nifty, labelmap_nifty = nb.load(file_path[0]), nb.load(file_path[1])
     volume, labelmap = volume_nifty.get_fdata(), labelmap_nifty.get_fdata()
     volume = (volume - np.min(volume)) / (np.max(volume) - np.min(volume))
-    volume, labelmap = preprocessor.rotate_orientation(volume, labelmap, orientation)
+    volume, labelmap = preprocessor.rotate_orientation(volume, labelmap,
+                                                       orientation)
     return volume, labelmap, volume_nifty.header
 
 
-def preprocess(volume, labelmap, remap_config, reduce_slices=False, remove_black=False, return_weights=False):
+def preprocess(volume,
+               labelmap,
+               remap_config,
+               reduce_slices=False,
+               remove_black=False,
+               return_weights=False):
     if reduce_slices:
         volume, labelmap = preprocessor.reduce_slices(volume, labelmap)
 
@@ -141,6 +174,7 @@ def preprocess(volume, labelmap, remap_config, reduce_slices=False, remove_black
 #         vol in volumes_to_use]
 #     return file_paths
 
+
 def load_file_paths(data_dir, label_dir, volumes_txt_file=None):
     """
     This function returns the file paths combined as a list where each element is a 2 element tuple, 0th being data and 1st being label.
@@ -158,8 +192,8 @@ def load_file_paths(data_dir, label_dir, volumes_txt_file=None):
     else:
         volumes_to_use = [name for name in os.listdir(data_dir)]
 
-    file_paths = [
-        [os.path.join(data_dir, vol, 'mri/orig.mgz'), os.path.join(label_dir, vol+'_glm.mgz')]
-        for
-        vol in volumes_to_use]
+    file_paths = [[
+        os.path.join(data_dir, vol, 'mri/orig.mgz'),
+        os.path.join(label_dir, vol + '_glm.mgz')
+    ] for vol in volumes_to_use]
     return file_paths
