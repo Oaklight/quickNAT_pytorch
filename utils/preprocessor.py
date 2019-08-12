@@ -22,10 +22,14 @@ def estimate_weights_mfb(labels):
     class_weights = np.zeros_like(labels)
     unique, counts = np.unique(labels, return_counts=True)
     median_freq = np.median(counts)
-    weights = np.zeros(len(unique))
+    weights = np.zeros(83)
+#     weights = np.zeros(len(unique))
+#     print(len(unique))
     for i, label in enumerate(unique):
+#         print(len(weights), i, label, len(labels), len(counts), len(unique))
         class_weights += (median_freq // counts[i]) * np.array(labels == label)
         weights[int(label)] = median_freq // counts[i]
+#         weights[i] = median_freq // counts[i]
 
     grads = np.gradient(labels)
     edge_weights = (grads[0] ** 2 + grads[1] ** 2) > 0

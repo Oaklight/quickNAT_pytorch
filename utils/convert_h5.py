@@ -41,7 +41,7 @@ def _write_h5(data, label, class_weights, weights, f, mode):
             class_weights).reshape((-1, H, W)))
 
 
-def convert_h5(data_dir, label_dir, data_split, train_volumes, test_volumes, f, remap_config='Neo',
+def convert_h5(data_dir, label_dir, data_split, train_volumes, test_volumes, f, remap_config=False,
                orientation=preprocessor.ORIENTATION['coronal']):
     # Data splitting
     if data_split:
@@ -57,7 +57,8 @@ def convert_h5(data_dir, label_dir, data_split, train_volumes, test_volumes, f, 
     print("===Train data===")
     data_train, label_train, class_weights_train, weights_train, _ = du.load_dataset(train_file_paths,
                                                                                      orientation,
-                                                                                     remap_config=remap_config,
+#                                                                                      remap_config=remap_config,
+                                                                                     remap_config=False,
                                                                                      return_weights=True,
                                                                                      reduce_slices=True,
                                                                                      remove_black=True)
@@ -68,7 +69,8 @@ def convert_h5(data_dir, label_dir, data_split, train_volumes, test_volumes, f, 
     print("===Test data===")
     data_test, label_test, class_weights_test, weights_test, _ = du.load_dataset(test_file_paths,
                                                                                  orientation,
-                                                                                 remap_config=remap_config,
+#                                                                                  remap_config=remap_config,
+                                                                                 remap_config=False,
                                                                                  return_weights=True,
                                                                                  reduce_slices=True,
                                                                                  remove_black=True)

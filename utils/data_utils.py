@@ -6,7 +6,8 @@ import numpy as np
 import torch
 import torch.utils.data as data
 from torchvision import transforms
-import preprocessor
+import utils.preprocessor
+import glob
 
 transform_train = transforms.Compose([
     transforms.RandomCrop(200, padding=56),
@@ -76,6 +77,7 @@ def load_dataset(file_paths,
     volume_list, labelmap_list, headers, class_weights_list, weights_list = [], [], [], [], []
 
     for file_path in file_paths:
+#         print(file_path)
         volume, labelmap, class_weights, weights, header = load_and_preprocess(
             file_path,
             orientation,
@@ -175,25 +177,48 @@ def preprocess(volume,
 #     return file_paths
 
 
-def load_file_paths(data_dir, label_dir, volumes_txt_file=None):
-    """
-    This function returns the file paths combined as a list where each element is a 2 element tuple, 0th being data and 1st being label.
-    It should be modified to suit the need of the project
-    :param data_dir: Directory which contains the data files
-    :param label_dir: Directory which contains the label files
-    :param volumes_txt_file: (Optional) Path to the a csv file, when provided only these data points will be read
-    :return: list of file paths as string
-    """
+def load_file_paths(path_to_dataset, label_dir, volumes_txt_file=None):
+#     """
+#     This function returns the file paths combined as a list where each element is a 2 element tuple, 0th being data and 1st being label.
+#     It should be modified to suit the need of the project
+#     :param data_dir: Directory which contains the data files
+#     :param label_dir: Directory which contains the label files
+#     :param volumes_txt_file: (Optional) Path to the a csv file, when provided only these data points will be read
+#     :return: list of file paths as string
+#     """
+# 
+#     volume_exclude_list = ['IXI290', 'IXI423']
+#     if volumes_txt_file:
+#         with open(volumes_txt_file) as file_handle:
+#             volumes_to_use = file_handle.read().splitlines()
+#     else:
+#         volumes_to_use = [name for name in os.listdir(data_dir)]
 
-    volume_exclude_list = ['IXI290', 'IXI423']
+#     file_paths = [[
+#         os.path.join(data_dir, vol, 'mri/orig.mgz'),
+#         os.path.join(label_dir, vol + '_glm.mgz')
+#     ] for vol in volumes_to_use]
+#     return file_paths
+    '''
+    This function receives the "path_to_dataset" which should contain both the 
+    NIFTI format data for both brain images and corresponding labels
+    return the collections of path_to_file, a list with each entry contains: 
+        [0] path to *.nii.gz brain image
+        [1] path to *.nii.gz brain label
+    '''
     if volumes_txt_file:
-        with open(volumes_txt_file) as file_handle:
-            volumes_to_use = file_handle.read().splitlines()
+        images, labels = [], []
+        with open(volumes_txt_file, 'r') as file_handles:
+            for each in file_handle.read().splitlines():
+                images.append(os.path.join(path_to_dataset, each, "*_brain.nii.gz"))
+                images.append(os.path.join(path_to_dataset, each, "*_labels.nii.gz"))
     else:
-        volumes_to_use = [name for name in os.listdir(data_dir)]
-
-    file_paths = [[
-        os.path.join(data_dir, vol, 'mri/orig.mgz'),
-        os.path.join(label_dir, vol + '_glm.mgz')
-    ] for vol in volumes_to_use]
+        path_to_imgs = os.path.join(path_to_dataset, "*_brain.nii.gz")
+        path_to_labels = os.path.join(path_to_dataset, "*_labels.nii.gz")
+        labels = glob.glob(path_to_labels)
+        images = glob.glob(path_to_imgs)
+        labels.sort()
+        images.sort()
+    
+    file_paths = tuple(zip(images, labels))
     return file_paths
